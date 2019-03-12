@@ -9,59 +9,40 @@
 
     $wrong_inputs = array();
 
-    /**
-     * Traitement du champs Pseudo :
-     */
+    $pseudo=mysqli_real_escape_string($pdo,$_POST['pseudo']);
+    $pwd=mysqli_real_escape_string($pdo,$_POST['pwd']);
 
-    if (empty($_POST['pseudo']){
-        $wrong_inputs['pseudo'] = "Entrer votre pseudo !";
-    }
-    else {
-        $verify_exist_pseudo_request = "SELECT id_Utilisateur FROM Utilisateur WHERE Pseudo = ?";
-        $verify_exist_pseudo = $pdo->prepare($verify_exist_pseudo_request);
-        $verify_exist_pseudo->execute([$_POST['pseudo']]);
-        $exist_pseudo = $verify_exist_pseudo->fetch();
-        if ($exist_pseudo) {
-            if (empty($_POST['psw']){
-                $wrong_inputs['psw'] ="Entrer votre mot de passe !";
-                else{
-                    $pws= password_hash ($_POST['psw'],PASSWORD_BCRYPT);
-                    $verify_psw_request = "SELECT Mot_de_passe FROM Utilisateur WHERE Pseudo = ?";
-                    $verify_user = $pdo->prepare($verify_user_request);
-                    $user = $verify_user->execute([$_POST['pseudo'],$pws]);
+    if(empty($pseudo))||empty($pwd){
+        $wrong_inputs['pseudo'] ="Entrer votre pseudo";
+        $wrong_inputs['pwd'] ="Entrer votre code";
+        header("Location:dashboard.php?connexion=error");
+        exit();
+    }else{
+        $sql="SELECT * FROM Utlisateur WHERE Pseudo='$pseudo'";
+        $verify=mysqli_query($pdo,$sql);
+        $verify_result=mysqli_num_rows($verify);
+        if($verify_result<1){
+            $wrong_inputs['pwd'] ="Votre compte n'existe pas!";
+            header("Location:dashboard.php?connexion=error");
+            exit();
+            }else{
+                if($row=mysqli_fetch_assoc($verify_result)){
+                $hashedPWDcheck=password_verify($pwd,$row['Mot_de_passe']);
+                if ($hashedPWDcheck==false){
+                $wrong_inputs['pwd'] ="Votre mot de passe n'est pas correct";
+                header("Location:dashboard.php?connexion=error");
+                exit();
+                }
+                elseif ($hashedPWDcheck==true){
+                    //connexion success
                     $_SESSION['auth'] = $user;
                     $_SESSION['status']['success'] = "Vous êtes maintenant connecté";
                     header('Location:dashboard.php');
-
                 }
             }
         }
 
     }
-
-    /**
-     * Mot de passe
-     */
-
-    if (empty($_POST['psw']) || ($_POST['psw'])!=($_POST['psw_confirm'])) {
-        $wrong_inputs['psw'] ="Les mots de passes ne correspondent pas";
-    }
-
-
-    if (empty($wrong_inputs)) {
-
-     
-        $pws= password_hash ($_POST['psw'],PASSWORD_BCRYPT);
-        $add_user_request = "INSERT INTO Utilisateur SET Pseudo = ?, Email = ?, Mot_de_passe = ?";
-        $add_user = $pdo->prepare($add_user_request);
-        $user = $add_user->execute([$_POST['pseudo'],$_POST['email'],$pws]);
-        $_SESSION['auth'] = $user;
-        $_SESSION['status']['success'] = "Vous êtes maintenant connecté";
-        header('Location:dashboard.php');
-    }
-}
-?>
-
 <?php var_dump($_SESSION) ?>
 <?php require '../Templates/header.php'; ?>
 
