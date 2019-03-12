@@ -3,46 +3,52 @@
     session_start();
     if (!empty($_POST)) {
 
+        // database operation
         require 'Database.php';
         $db_connect = new Database('projet');
         $pdo = $db_connect->getPDO();
 
-    $wrong_inputs = array();
+        $wrong_inputs = array();
 
-    $pseudo=mysqli_real_escape_string($pdo,$_POST['pseudo']);
-    $pwd=mysqli_real_escape_string($pdo,$_POST['pwd']);
+        $pseudo = mysqli_real_escape_string($pdo, $_POST['pseudo']);
+        $pwd = mysqli_real_escape_string($pdo, $_POST['pwd']);
 
-    if(empty($pseudo))||empty($pwd){
-        $wrong_inputs['pseudo'] ="Entrer votre pseudo";
-        $wrong_inputs['pwd'] ="Entrer votre code";
-        header("Location:dashboard.php?connexion=error");
-        exit();
-    }else{
-        $sql="SELECT * FROM Utlisateur WHERE Pseudo='$pseudo'";
-        $verify=mysqli_query($pdo,$sql);
-        $verify_result=mysqli_num_rows($verify);
-        if($verify_result<1){
-            $wrong_inputs['pwd'] ="Votre compte n'existe pas!";
+        // vadiation
+        if (empty($pseudo) || empty($pwd)) {
+            $wrong_inputs['pseudo'] = "Entrer votre pseudo";
+            $wrong_inputs['pwd'] = "Entrer votre code";
             header("Location:dashboard.php?connexion=error");
             exit();
-            }else{
-                if($row=mysqli_fetch_assoc($verify_result)){
-                $hashedPWDcheck=password_verify($pwd,$row['Mot_de_passe']);
-                if ($hashedPWDcheck==false){
-                $wrong_inputs['pwd'] ="Votre mot de passe n'est pas correct";
+        } else {
+            $sql = "SELECT * FROM Utlisateur WHERE Pseudo='$pseudo'";
+            $verify = mysqli_query($pdo, $sql);
+            $verify_result = mysqli_num_rows($verify);
+            if ($verify_result < 1) {
+                $wrong_inputs['pwd'] = "Votre compte n'existe pas!";
                 header("Location:dashboard.php?connexion=error");
                 exit();
-                }
-                elseif ($hashedPWDcheck==true){
-                    //connexion success
-                    $_SESSION['auth'] = $user;
-                    $_SESSION['status']['success'] = "Vous êtes maintenant connecté";
-                    header('Location:dashboard.php');
+            } else {
+                if ($row = mysqli_fetch_assoc($verify_result)) {
+                    $hashedPWDcheck = password_verify($pwd, $row['Mot_de_passe']);
+                    if ($hashedPWDcheck == false) {
+                        $wrong_inputs['pwd'] = "Votre mot de passe n'est pas correct";
+                        header("Location:dashboard.php?connexion=error");
+                        exit();
+                    } elseif ($hashedPWDcheck == true) {
+                        //connexion success
+                        $_SESSION['auth'] = $user;
+                        $_SESSION['status']['success'] = "Vous êtes maintenant connecté";
+                        header('Location:dashboard.php');
+                    }
                 }
             }
+
         }
 
     }
+
+?>
+
 <?php var_dump($_SESSION) ?>
 <?php require '../Templates/header.php'; ?>
 
