@@ -62,6 +62,18 @@
                 </button>
             </div>
             <div class="modal-body">
+                <?php if (!empty($wrong_inputs)): ?>
+                    <div class="alert alert-danger">
+                        Vous n'êtes pas connecté
+                        <ul>
+                            <?php foreach ($wrong_inputs as $wrong_input): ?>
+                                <li>
+                                    <?= $wrong_input ?>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
+                <?php endif; ?>
                 <form action="" method="POST"  novalidate>
                     <div class="form-group">
                         <input type="text" class="form-control" id="pseudoInput" placeholder="Pseudo">
